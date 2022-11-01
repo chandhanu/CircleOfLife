@@ -40,14 +40,15 @@ class Prey(Graph_util):
         self.path.append(self.value)
 
     
-    def move(self):
+    def move(self, mark = True):
         neighbors = list(self.G.neighbors(self.value))
         possible_nodes = neighbors[:]
         possible_nodes.append(self.value)
         self.value = random.choice(possible_nodes) # Choosing next node = random(curr_position + neighbor_nodes)
         self.node = self.G.nodes[self.value]
         self.G.prey = self.value
-        self.path.append(self.value)
+        if mark:
+            self.path.append(self.value)
     
     def get_position(self):
         return self.value
@@ -62,7 +63,7 @@ class Predator(Graph_util):
         self.path = []
         self.path.append(self.value)
 
-    def move(self, agent_pos):
+    def move(self, agent_pos, mark = True):
         neighbors = list(self.G.neighbors(self.value))
         possible_nodes = neighbors[:]
         possible_nodes.append(self.value)
@@ -85,7 +86,8 @@ class Predator(Graph_util):
         self.value = road_to_kill_agent[0]
         self.node = self.G.nodes[self.value]
         self.G.predator = self.value
-        self.path.append(self.value)
+        if mark:
+            self.path.append(self.value)
     
     def get_position(self):
         return self.value

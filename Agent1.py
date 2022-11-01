@@ -4,8 +4,8 @@ from itertools import combinations
 from CreateEnvironment import Graph_util, Node
 import networkx as nx
 import random
-random.seed(13) # Predator wins 
-#random.seed(1) # Agent wins 
+#random.seed(13) # Predator wins 
+random.seed(1) # Agent wins 
 import numpy as np
 from PreyPredator import Prey, Predator
 import collections
@@ -281,19 +281,21 @@ if __name__ == "__main__":
     predator = Predator(graph,graph.node_count)
     #########################
     agent1 = Agent1(graph, graph.node_count, prey, predator)
+    DEBUG = True
     if DEBUG: 
         print("----------CurrPos--------------")
         print("Prey     : ", prey.get_position())
         print("Predator : ", predator.get_position())
         print("Agent    : ", agent1.get_position())
     #########################
-    
+    DEBUG = False
     verdict, msg = agent1.run(prey, predator)
     print("Success ? :", verdict)
     print(msg)
+    DEBUG = True
     if DEBUG: 
         print("MSG :", msg)
-        print("agent1 path : ", agent1.path)
+        print("agent1 path("+str(len(agent1.path))+") : ", agent1.path)
         print("prey path : ", prey.path)
-        print("predator path : ", predator.path)
+        #print("predator path : ", predator.path)
         graph.display()

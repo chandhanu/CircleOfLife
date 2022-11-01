@@ -1,3 +1,4 @@
+from copy import copy
 import networkx as nx
 import matplotlib.pyplot as plt
 from itertools import combinations
@@ -5,17 +6,77 @@ from CreateEnvironment import Graph_util, Node
 import networkx as nx
 import random
 #random.seed(13) # Predator wins 
-#random.seed(1) # Agent wins 
+random.seed(1) # Agent wins 
 import numpy as np
 from PreyPredator import Prey, Predator
 import collections
 import heapq as hq
 import json
 import sys 
+import copy 
 
 DEBUG = False
 SUCCESS = True 
 FAILURE = False 
+
+def get_simulation_data(graph, next_node_list ,prey, predator, agent, heuristic_trials = 1):
+    d= {}
+    for next_node in next_node_list:
+        success_count = 0 
+        for i in range(heuristic_trials):
+            verdict, msg = run_simulation(graph, next_node_list ,prey, predator, agent)
+            if verdict == True:
+                success_count+=1
+        d[next_node]=success_count
+    survivablity_index = {k: v for k, v in sorted(d.items(), key=lambda item: item[0], reverse=True)}
+    print(survivablity_index)
+    return next(iter(survivablity_index))
+        
+
+def run_simulation(graph, next_node_list ,prey, predator, agent):
+    node = None 
+    #print("Agent", "Prey", "Predator" )
+    count = 0 
+    #DEBUG = True
+    while ((agent.get_position()!=prey.get_position()) and (predator.get_position()!=agent.get_position())):
+        # 1. agent moves 
+        count +=1 
+        agent.move(prey.get_position(), predator.get_position())
+        if DEBUG:
+            print("----------Moved("+str(count)+")------prey-------")
+            print("Prey     : ", prey.get_position())
+            print("Predator : ", predator.get_position())
+            print("Agent    : ", agent.get_position())
+        if agent.get_position()==prey.get_position():
+            return SUCCESS, "Agent caught prey at "+ str(prey.get_position())
+        # 2. prey moves 
+        prey.move(mark = False)    
+        if DEBUG:
+            print("----------Moved("+str(count)+")------prey-------")
+            print("Prey     : ", prey.get_position())
+            print("Predator : ", predator.get_position())
+            print("Agent    : ", agent.get_position())
+        #print(self.get_position==prey.get_position())
+        if agent.get_position()==prey.get_position():
+            return SUCCESS, "Agent caught prey at "+ str(prey.get_position())
+        # 3. predator moves
+        predator.move(agent.value,mark = False)
+        if DEBUG:
+            print("----------Moved("+str(count)+")-------pred------")
+            print("Prey     : ", prey.get_position())
+            print("Predator : ", predator.get_position())
+            print("Agent    : ", agent.get_position())
+        if predator.get_position()==agent.get_position():
+            return FAILURE, "Predator killed Agent at "+ str(predator.get_position())
+    if predator.get_position()==agent.get_position():
+        return FAILURE, "Predator killed Agent at "+ str(predator.get_position())
+    elif agent.get_position()==prey.get_position():
+        return SUCCESS, "Agent caught prey at "+ str(prey.get_position())
+    else:
+        print("agent prey predator ")
+        print(agent.get_position(), "  ", prey.get_position(), "  ", predator.get_position())
+        return  False, "total count "+str(count)
+
 
 def get_dict(source, target):
     neighbors = list(graph.G.neighbors(source))
@@ -204,6 +265,81 @@ class Agent2(Graph_util):
         #update the graph and Agent pos
         self.value = next_node
         self.graph.agent = next_node
+        #self.path.append(next_node)
+
+    def move_for_simulation(self, prey_pos, predator_pos, prey, predator):
+        agent_to_prey_by_cost, agent_to_prey,  agent_to_predator_by_cost, predator_to_agent,all_shortest_path_cost,all_pairs_shortest_path = get_neighbor_data(self.graph, prey_pos, predator_pos, self.value)
+        min_cost_to_prey = next(iter(agent_to_prey_by_cost.keys()))
+        max_cost_to_predator = next(iter(agent_to_predator_by_cost.keys()))
+        agent_pos = self.value
+        agent_to_prey_cost = all_shortest_path_cost[agent_pos][prey_pos]
+        agent_to_predator_cost = all_shortest_path_cost[agent_pos][predator_pos]
+        x = agent_to_predator_cost
+        y = agent_to_prey_cost
+        agent_neighbors = list(self.graph.G.neighbors(agent_pos))
+        next_node_list = []
+        next_node_priority = {
+            1:[],
+            2:[],
+            3:[],
+            4:[],
+            5:[],
+            6:[],
+            7:[]
+        }
+        for neighbor in agent_neighbors:
+            neighbor_cost_to_prey,  neighbor_path_to_prey = agent_to_prey[neighbor][0],agent_to_prey[neighbor][1]
+            neighbor_cost_to_predator, neighbor_path_to_predator = predator_to_agent[neighbor][0],predator_to_agent[neighbor][1]
+            # 1. Neighbors that are closer to the Prey and farther from the Predator.
+            if neighbor_cost_to_prey<y and neighbor_cost_to_predator>x:
+                next_node_priority[1].append(neighbor)
+            # 2. Neighbors that are closer to the Prey and not closer to the Predator.
+            elif neighbor_cost_to_prey<y and neighbor_cost_to_predator==x:
+                next_node_priority[2].append(neighbor)
+            # 3. Neighbors that are not farther from the Prey and farther from the Predator.
+            elif neighbor_cost_to_prey==y and neighbor_cost_to_predator>x:
+                next_node_priority[3].append(neighbor)
+            # 4. Neighbors that are not farther from the Prey and not closer to the Predator.
+            elif neighbor_cost_to_prey==y and neighbor_cost_to_predator==x:
+                next_node_priority[4].append(neighbor)
+            # 5. Neighbors that are farther from the Predator.
+            elif  neighbor_cost_to_predator>x:
+                next_node_priority[5].append(neighbor)
+            # 6. Neighbors that are not closer to the Predator.
+            elif neighbor_cost_to_predator==x:
+                next_node_priority[6].append(neighbor)
+            # 7. Sit still and pray.
+            else:
+                next_node_priority[7].append(neighbor)
+        
+        next_node_list = []
+        for k,v in next_node_priority.items():
+            if len(v):
+                next_node_list = v
+                break 
+        next_node = None
+        if not len(next_node_list):
+            next_node = agent_pos # Agent waits in the same position 
+        elif len(next_node_list) == 1:
+            next_node = next_node_list[0] # CHAN - Update required if more than 1 node existing with same priority
+        else:
+            # Heuristics part 
+            original_prey = copy.deepcopy(prey)
+            original_predator = copy.deepcopy(predator)
+            original_agent = copy.deepcopy(self)
+            original_graph = copy.deepcopy(self.graph)
+            graph1 = copy.deepcopy(self.graph)
+            print(prey.get_position(),self.get_position() , predator.get_position(), "b4")
+            next_node = get_simulation_data(graph1,next_node_list, prey, predator, self, heuristic_trials = 5)
+            prey = original_prey
+            predator = original_predator
+            self = original_agent # CHAN - Pivotal 
+            print(prey.get_position(), self.get_position(), predator.get_position(), "After")
+        #print(next_node_list, "chosen : ", next_node)
+        #update the graph and Agent pos
+        #print(next_node)
+        self.value = next_node
+        self.graph.agent = next_node
         self.path.append(next_node)
         
     def get_position(self):
@@ -218,12 +354,12 @@ class Agent2(Graph_util):
             count +=1 
             if threshold and count == threshold :
                 return FAILURE, "Threshold reached "+ str(threshold)
-            self.move(prey.get_position(), predator.get_position())
-            if DEBUG:
-                print("----------Moved("+str(count)+")------prey-------")
-                print("Prey     : ", prey.get_position())
-                print("Predator : ", predator.get_position())
-                print("Agent    : ", self.get_position())
+            self.move_for_simulation(prey.get_position(), predator.get_position(), prey, predator)
+            #if DEBUG:
+            print("----------Moved("+str(count)+")------prey-------")
+            print("Prey     : ", prey.get_position())
+            print("Predator : ", predator.get_position())
+            print("Agent    : ", self.get_position())
             if self.get_position()==prey.get_position():
                 return SUCCESS, "Agent caught prey at "+ str(prey.get_position())
             # 2. prey moves 
@@ -279,18 +415,23 @@ if __name__ == "__main__":
     graph = Graph_util(50)
     prey = Prey(graph,graph.node_count)
     predator = Predator(graph,graph.node_count)
-    agent1 = Agent2(graph, graph.node_count, prey, predator)
+    #########################
+    agent2 = Agent2(graph, graph.node_count, prey, predator)
+    DEBUG = True 
     if DEBUG: 
         print("----------CurrPos--------------")
         print("Prey     : ", prey.get_position())
         print("Predator : ", predator.get_position())
-        print("Agent    : ", agent1.get_position())
-    verdict, msg = agent1.run(prey, predator)
+        print("Agent    : ", agent2.get_position())
+    #########################
+    DEBUG = False
+    verdict, msg = agent2.run(prey, predator)
     print("Success ? :", verdict)
-    print(msg)
+    #print(msg)
+    DEBUG = True
     if DEBUG: 
         print("MSG :", msg)
-        print("agent1 path : ", agent1.path)
+        print("agent2 path("+str(len(agent2.path))+") : ", agent2.path)
         print("prey path : ", prey.path)
-        print("predator path : ", predator.path)
+        #print("predator path : ", predator.path)
         graph.display()

@@ -9,6 +9,7 @@ from PreyPredator import Prey, Predator
 import collections
 import heapq as hq
 from Agent1 import FAILURE, Agent1
+from Agent2 import Agent2
 import json
 import sys 
 
@@ -21,8 +22,11 @@ def run_simulation(runs = 100, trials = 30, file = "agent1"):
         for j in range (1, trials+1):
             prey = Prey(graph,graph.node_count)
             predator = Predator(graph,graph.node_count)
-            agent1 = Agent1(graph, graph.node_count, prey, predator)
-            verdict, msg = agent1.run(prey, predator)
+            if file == "agent1":
+                agent = Agent1(graph, graph.node_count, prey, predator)
+            elif file == "agent2":
+                agent = Agent2(graph, graph.node_count, prey, predator)
+            verdict, msg = agent.run(prey, predator)
             if verdict == False : 
                 #print(msg)
                 failure_count+=1
@@ -39,4 +43,5 @@ def run_simulation(runs = 100, trials = 30, file = "agent1"):
         json.dump(d, outfile)
         
 if __name__ == "__main__":
-    run_simulation(file = "agent1")
+    #run_simulation(file = "agent1")
+    run_simulation(file = "agent2")
