@@ -10,6 +10,7 @@ import collections
 import heapq as hq
 from Agent1 import FAILURE, Agent1
 from Agent2 import Agent2
+from Agent3 import Agent3
 import json
 import sys 
 
@@ -26,6 +27,9 @@ def run_simulation(runs = 100, trials = 30, file = "agent1"):
                 agent = Agent1(graph, graph.node_count, prey, predator)
             elif file == "agent2":
                 agent = Agent2(graph, graph.node_count, prey, predator)
+            elif file == "agent3":
+                agent = Agent3(graph, graph.node_count, prey, predator)
+                agent.inititate_believes(graph, predator)
             verdict, msg = agent.run(prey, predator)
             if verdict == False : 
                 #print(msg)
@@ -44,4 +48,4 @@ def run_simulation(runs = 100, trials = 30, file = "agent1"):
         
 if __name__ == "__main__":
     #run_simulation(file = "agent1")
-    run_simulation(file = "agent2")
+    run_simulation(file = "agent3")
