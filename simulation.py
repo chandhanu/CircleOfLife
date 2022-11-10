@@ -11,10 +11,12 @@ import heapq as hq
 from Agent1 import FAILURE, Agent1
 from Agent2 import Agent2
 from Agent3 import Agent3
+from Agent5 import Agent5
+from Agent7 import Agent7
 import json
 import sys 
 
-def run_simulation(runs = 100, trials = 30, file = "agent1"):
+def run_simulation(runs = 100, trials = 30, file = "agent1",variation= ""):
     d = {}
     for i in range(1, runs+1):
         d[i] = {}
@@ -30,7 +32,23 @@ def run_simulation(runs = 100, trials = 30, file = "agent1"):
             elif file == "agent3":
                 agent = Agent3(graph, graph.node_count, prey, predator)
                 agent.inititate_believes(graph, predator)
-            verdict, msg = agent.run(prey, predator)
+            else:
+                if file == "agent5":
+                    agent = Agent5(graph, graph.node_count, prey, predator)
+                if file == "agent7":
+                    agent = Agent7(graph, graph.node_count, prey, predator)
+                # Markup 
+                diff = predator.get_position() - agent.get_position()
+                if diff < 0 :
+                    diff = - diff 
+                if diff < 5:
+                    r = random.choice ([25])
+                    predator.value = (agent.get_position()+r)%graph.node_count
+                # Markup ends 
+                agent.inititate_believes(graph, predator)
+                #input()
+            verdict, msg = agent.run(prey, predator, threshold=100)
+            print(msg)
             if verdict == False : 
                 #print(msg)
                 failure_count+=1
@@ -40,12 +58,15 @@ def run_simulation(runs = 100, trials = 30, file = "agent1"):
         failure_rate = failure_count/trials
         d[i] = { j : (success_rate, failure_rate) }
         print("run: "+str(i)+", trials: "+str(j)+", success_rate : "+str(success_rate))
-        with open(file+".log", "a") as myfile:
+        with open(file+variation+".log", "a") as myfile:
                 myfile.write("\n")
                 myfile.write("run: "+str(i)+", trials: "+str(j)+", success_rate : "+str(success_rate))
-    with open(file+".json", "w") as outfile:
+    with open(file+variation+".json", "w") as outfile:
         json.dump(d, outfile)
         
 if __name__ == "__main__":
     #run_simulation(file = "agent1")
-    run_simulation(file = "agent3")
+    #run_simulation(file = "agent2")
+    #run_simulation(file = "agent3", variation = "")
+    #run_simulation(file = "agent5", variation = "new")
+    run_simulation(file = "agent7", variation = "")

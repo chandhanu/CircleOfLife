@@ -1,0 +1,14 @@
+
+run: 1, trials: 30, success_rate : 0.23333333333333334
+run: 2, trials: 30, success_rate : 0.3333333333333333
+run: 3, trials: 30, success_rate : 0.16666666666666666
+run: 4, trials: 30, success_rate : 0.3
+run: 5, trials: 30, success_rate : 0.4
+run: 6, trials: 30, success_rate : 0.36666666666666664
+run: 7, trials: 30, success_rate : 0.26666666666666666
+run: 8, trials: 30, success_rate : 0.3
+run: 9, trials: 30, success_rate : 0.3
+run: 10, trials: 30, success_rate : 0.3
+run: 11, trials: 30, success_rate : 0.26666666666666666
+run: 12, trials: 30, success_rate : 0.3333333333333333
+run: 13, trials: 30, success_rate : 0.43333333333333335

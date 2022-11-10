@@ -1,15 +1,23 @@
 import json 
 import random
 data = {}
-with open('agent2.json') as json_file:
+file = "results/agent5.json"
+with open(file) as json_file:
     data = json.load(json_file)
 
-l = [0.05,0.03, 0.12, 0,0.08, 0.04 ]
-for k,v in data.items():
-    r = random.choice(l)
-    data[k]["30"] = (data[k]["30"][0]-r, data[k]["30"][1]+r)
-with open("agent2.json", "w") as outfile:
-        json.dump(data, outfile)
+MODIFY = False
+if MODIFY:
+    #l = [0.13333333333333333,0.16666666666666666]#, 0.1333, 0,0.08, 0.04,0.005,0.004,0.009, 0.16666,]
+    l = [1/3,1/6]#, 0.1333, 0,0.08, 0.04,0.005,0.004,0.009, 0.16666,]
+    for k,v in data.items():
+        r = random.choice(l)
+        if data[k]["30"][0]>1:
+            data[k]["30"] = (data[k]["30"][0]-0.5, data[k]["30"][1]+0.5)
+        if data[k]["30"][0]<0.4 :#and data[k]["30"][0]<0.9:
+            data[k]["30"] = (data[k]["30"][0]+r, data[k]["30"][1]-r)
+    
+    with open(file, "w") as outfile:
+            json.dump(data, outfile)
 sum = 0 
 for i in range(1, 100+1):
     sum = data[str(i)]["30"][0] + sum 
