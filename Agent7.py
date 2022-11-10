@@ -408,8 +408,59 @@ class Agent7(Graph_util):
             for i,v in believes.items():
                 if not (i == k):
                     believes[i] = believes[i]/p_predator_not_found_in_agent_node
-            if DEBUG: print_b(believes, "yyy Updating beliefs yyy")
+            
+            p_predator_in_node_now = copy.deepcopy(believes)
+            max_belief_predator = max(believes, key=believes.get)
+            print("max_belief_predator:", max_belief_predator)
+            max_belief = believes[max_belief_predator]
+            believes[max_belief_predator] = 0 
+
+            all_shortest_path_cost =  self.graph.all_shortest_paths() 
+            all_pairs_shortest_path = dict(nx.all_pairs_shortest_path(self.graph.G))
+            all_pairs_shortest_path[self.get_position()][max_belief_predator].remove(max_belief_predator)
+            ratio_40 = 0.4*max_belief
+            ratio_60 = 0.6*max_belief
+            print("sum: " , ratio_60+ratio_40, "==", max_belief)
             #input()
+
+            shortest_path_from_agent_to_pred = all_pairs_shortest_path[self.get_position()][max_belief_predator]
+            believes[max_belief_predator] = 0
+            s= []
+            ratio_60_count = 0
+            ratio_40_count = 0
+            for i in list(self.graph.G.neighbors(max_belief_predator)):
+                x = all_shortest_path_cost[self.get_position()][i]               
+                if len(shortest_path_from_agent_to_pred) == x:
+                    ratio_60_count +=1
+                    s.append(x)
+                else:
+                    ratio_40_count+=1
+                print(i)
+            
+            if DEBUG: print_b(believes, "b4 newwwww")
+            p_predator_in_node_next = 0
+            for i in list(self.graph.G.neighbors(max_belief_predator)):
+                if i == max_belief_predator:
+                    continue
+                elif i in s: 
+                    p_predator_in_node_next += p_predator_in_node_now[k]+ratio_60/len(s)
+                else:
+                    p_predator_in_node_next += p_predator_in_node_now[k]+ratio_40/ratio_40_count
+                believes[i] = p_predator_in_node_next 
+
+
+            # Updating belief to find P(Prey in ith node next)
+            if DEBUG: print_b(believes, "after newwwww")
+            for i,v in believes.items():
+                p_predator_in_node_next = 0
+                neighbors = list(self.graph.G.neighbors(i))
+                neighbors.append(i)
+                for k in neighbors:    
+                    p_predator_in_node_next += p_predator_in_node_now[k]*(1/len(neighbors))
+                believes[i] = p_predator_in_node_next 
+        DEBUG = False
+        if DEBUG: print_b(believes, "final")
+        
     def update_prey_believes(self,prey, survey=False):
         DEBUG = False
         believes = self.believes
