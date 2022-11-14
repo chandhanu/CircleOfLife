@@ -2,6 +2,8 @@ import networkx as nx
 import matplotlib.pyplot as plt
 from itertools import combinations
 import random
+import numpy
+import pandas as pd
 
 class Node:
     def __init__(self, i) -> None:
@@ -104,30 +106,76 @@ class Graph_util(Node):
 
     def all_shortest_paths(self):
         return nx.floyd_warshall(self.G, weight='weight')
-if __name__ == "__main__":
-    graph = Graph_util(27)
-    #graph.generate_edges()
-    #print(graph.G.nodes[0]["data"].degree)
-    #graph.display()
+# Simulate from multinomial distribution
+def simulate_multinomial(vmultinomial):
+        r=np.random.uniform(0.0, 1.0)
+        CS=np.cumsum(vmultinomial)
+        CS=np.insert(CS,0,0)
+        m=(np.where(CS<r))[0]
+        nextState=m[len(m)-1]
+        return nextState
 
-    #s_path = nx.shortest_path(graph.G, source=graph.G.nodes[0]["data"].node_value, target=graph.G.nodes[5]["data"].node_value)
-    source = 0
-    target = 7
-    s_path, s_path_edges = graph.shortest_path(source,target)
-    print("Floyd-warshall algorithm--------------")
-    for k,v in graph.all_shortest_paths().items():
-        print(k, v )
-    print("All shortest pair length ------------")
-    path = dict(nx.all_pairs_shortest_path(graph.G))
-    for k,v in path.items():
-        print(k, v )
-    #print(    graph.G.nodes[4]["data"].node_value)    #shortest_path(graph.G, dist, prev, graph.G.nodes[0]["data"].node_value)
-    #for i in (graph.G.neighbors(4)):
-    #    print("neighbor", i)
-    #print(graph.G.nodes())
-    graph.display()
-    #s_path = get_path(graph.G.nodes[5]["data"].node_value, prev)
-    #print(s_path)
-    #print(graph.G.adj)
-    #print(graph.G.degree())
-    #graph.display_shortest_path(source, s_path_edges)
+import numpy as np
+
+
+def stationary_probablity(start_state):
+    for i in range(50):
+        steady_state = np.dot(start_state,transition_matrix)
+    return steady_state
+   
+if __name__ == "__main__":
+    graph = Graph_util(10)
+    adjaceny_matrix = nx.to_numpy_matrix(graph.G)
+    #adjaceny_matrix = (numpy.asanyarray(adjaceny_matrix))
+    #adjaceny_matrix[0] = 1
+    '''
+    
+    
+    '''
+    for i in range(len(adjaceny_matrix)):
+        adjaceny_matrix[i,i] = 1
+    #print(adjaceny_matrix)
+    
+    #input()
+    transition_matrix = (adjaceny_matrix/adjaceny_matrix.sum(axis=0))
+    print(transition_matrix)
+
+    # Normalize the matrix so that rows sum to 1
+    #P = adjaceny_matrix/np.sum(adjaceny_matrix, 1)[:, np.newaxis]
+    #print(P)
+    #start_state = np.array([ 0,0,0,0,0,0,0,0,0,0])
+    
+    start_state = np.array([0 for i in range(10)])
+    start_state[3] = 1
+    start_state = np.array([1/9 for i in range(10)])
+    start_state[3] = 0
+    start_state = np.array([ 0.06611570247933884,
+                0.07644628099173555,
+                0.10743801652892562,
+                0.12603305785123967,
+                0.11157024793388431,
+                0.0847107438016529,
+                0.09917355371900828,
+                0.11983471074380166,
+                0.11776859504132232,
+                0.09090909090909091])
+    print(start_state)
+    input()
+    #start_state = np.dot(start_state,transition_matrix)
+    #print(start_state)
+    #start_state = np.dot(start_state,transition_matrix)
+    #rint(start_state)
+    #exit()
+    for i in range(50):
+            #transition_matrix = np.dot(transition_matrix.T,transition_matrix)
+            #transition_matrix = np.dot(transition_matrix.T,transition_matrix)
+            start_state = np.dot(start_state,transition_matrix)
+            
+            print(start_state)
+            input()
+            
+    print(start_state)
+    print(start_state.sum())
+    
+    
+

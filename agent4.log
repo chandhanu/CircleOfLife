@@ -1,0 +1,13 @@
+
+run: 1, trials: 100, success_rate : 0.83
+run: 2, trials: 100, success_rate : 0.9
+run: 3, trials: 100, success_rate : 0.85
+run: 4, trials: 100, success_rate : 0.85
+run: 5, trials: 100, success_rate : 0.89
+run: 6, trials: 100, success_rate : 0.89
+run: 7, trials: 100, success_rate : 0.87
+run: 8, trials: 100, success_rate : 0.91
+run: 9, trials: 100, success_rate : 0.92
+run: 1, trials: 100, success_rate : 0.83
+run: 2, trials: 100, success_rate : 0.9
+run: 3, trials: 100, success_rate : 0.85
