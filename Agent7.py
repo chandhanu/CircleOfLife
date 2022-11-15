@@ -5,7 +5,7 @@ from CreateEnvironment import Graph_util, Node
 import networkx as nx
 import random
 #random.seed(13) # Predator wins 
-#random.seed(5) # Agent wins 
+#random.seed(2) # Agent wins 
 import numpy as np
 from PreyPredator import Prey, Predator
 import collections
@@ -221,8 +221,6 @@ class Agent7(Graph_util):
                     pos = i
             next_node = pos
             next_node = next_node_list[0] # CHAN - Update required if more than 1 node existing with same priority
-        if not FIRST_TIME: 
-            if DEBUG: print(">>>>>>>max belief : ", max_belief_predator, "next_node : ", next_node)
         self.value = next_node
         self.graph.agent = next_node
         self.path.append(next_node)
@@ -238,15 +236,6 @@ class Agent7(Graph_util):
             if count == threshold:
                 return  FAILURE, "total count "+str(count)
             DEBUG = False
-            if DEBUG: 
-                print("----------CurrPos--------------")
-                print("Prey - ", prey.get_position(), end="   ")
-                print("Predator - ", predator.get_position(), end="  ")
-                print("Agent - ", self.get_position())
-                print("---------------------------------")
-            DEBUG = False
-                #print("----------Believes-------------")
-                #print_b(agent.believes)
             self.status( prey, predator)
             if count == 0 :
                 # 1. Survey and 2. update beliefs
@@ -261,33 +250,15 @@ class Agent7(Graph_util):
                 # 3. Move Agent - check if it catches the prey
                 self.move(self.believes_prey, self.believes_predator)
             self.status( prey, predator)
-            if DEBUG: 
-                print("----------CurrPos--------------")
-                print("Prey - ", prey.get_position(), end="   ")
-                print("Predator - ", predator.get_position(), end="  ")
-                print("Agent - ", self.get_position())
-                print("---------------------------------")
             # 4. Update belief for prey/predator based on observation
             self.update_prey_believes(prey, survey=False)
             self.update_predator_believes(predator, survey=False) # Only updates believes 
             # 5. Move Prey
             prey.move()    
             self.status( prey, predator) 
-            if DEBUG: 
-                print("----------CurrPos--------------")
-                print("Prey - ", prey.get_position(), end="   ")
-                print("Predator - ", predator.get_position(), end="  ")
-                print("Agent - ", self.get_position())
-                print("---------------------------------")
             # 6. Move Predator - check if it catches the agent
             predator.move_or_distract(self.value) #Predator can be distracted with the probablity of distribution of 40%  | with 60% it will pursue the target/agent
             self.status( prey, predator)
-            if DEBUG: 
-                print("----------CurrPos--------------")
-                print("Prey - ", prey.get_position(), end="   ")
-                print("Predator - ", predator.get_position(), end="  ")
-                print("Agent - ", self.get_position())
-                print("---------------------------------")
             # 7. Update belief for prey/predator based on their transition model
             self.update_prey_believes(prey, survey=False)
             self.update_predator_believes(predator, survey=False) # Only updates believes
@@ -326,6 +297,9 @@ class Agent7(Graph_util):
         return self.update_predator_believes(self, graph, prey, predator)
 
     def break_ties(self, key_list):
+        '''
+        Breaking ties when in close proximity with Agent then at random
+        '''
         node = None 
         all_shortest_path_cost =  self.graph.all_shortest_paths() #floyd-warshall 
         min_v = 99999
@@ -362,17 +336,11 @@ class Agent7(Graph_util):
     def update_predator_believes(self,predator, survey=False, FIRST_TIME = False):
         DEBUG = False
         believes = self.believes_predator
-        if DEBUG: 
-                print("Updating beliefs")
-                print("----------CurrPos--------------")
-                print("Predator : ", predator.get_position())
-                print("Agent    : ", self.get_position())
         if survey:
             is_predator_found,surveyed_node = self.survey_predator(predator)
             if FIRST_TIME:
                 surveyed_node = predator.get_position()
                 is_predator_found = True
-            if DEBUG: print("Picked random : ", surveyed_node)
             if is_predator_found:
                 for k,v in believes.items():
                     if k == surveyed_node:
@@ -382,14 +350,7 @@ class Agent7(Graph_util):
                 p_predator_in_node_now = copy.deepcopy(believes)
                 #if DEBUG: print_b(believes, "p_predator_in_node_now")
                 
-                # Updating belief to find P(Prey in ith node next)
-                for i,v in believes.items():
-                    p_predator_in_node_next = 0
-                    neighbors = list(self.graph.G.neighbors(i))
-                    neighbors.append(i)
-                    for k in neighbors:
-                        p_predator_in_node_next += p_predator_in_node_now[k]*(1/len(neighbors))
-                    believes[i] = p_predator_in_node_next 
+                
                 #if DEBUG: print_b(believes, "p_predator_in_node_now")
             else:
                 p_not_finding_predator_at_node = 1 - believes[surveyed_node]
@@ -399,20 +360,8 @@ class Agent7(Graph_util):
                         believes[k] = 0
                     else:
                         believes[k] = (believes[k]/p_not_finding_predator_at_node)
-                if DEBUG : input()
-                p_predator_in_node_now = copy.deepcopy(believes)
-                if DEBUG: print_b(p_predator_in_node_now, "p_predator_in_node_now")
-                # Updating belief to find P(Prey in ith node next)
-                for i,v in believes.items():
-                    p_predator_in_node_next = 0
-                    neighbors = list(self.graph.G.neighbors(i))
-                    neighbors.append(i)
-                    for k in neighbors: # optimised to calculate the P(predator in ith node next) using the neighbor of the ith node
-                        p_predator_in_node_next += p_predator_in_node_now[k]*(1/len(neighbors))
-                        #if DEBUG: print(k,":",p_predator_in_node_now[k], "*",0.25 ,"=", p_predator_in_node_next) 
-                    believes[i] = p_predator_in_node_next
-                    #if DEBUG: print("+++P(",i,") = ",believes[i])
-                #if DEBUG: print_b(believes, "p_predator_in_node_next")
+               
+
         else:
             #Update belief
             k = self.get_position()
@@ -444,12 +393,10 @@ class Agent7(Graph_util):
                 x = all_shortest_path_cost[self.get_position()][i]               
                 if len(shortest_path_from_agent_to_pred) == x:
                     ratio_60_count +=1
-                    s.append(x)
+                    s.append(x) #Finding the count of eligible neighbors to prusue the target (60% to target)
                 else:
-                    ratio_40_count+=1
-                #print(i)
-            
-            #if DEBUG: print_b(believes, "b4 newwwww")
+                    ratio_40_count+=1 # Finding the count of distractions (40% to distract)
+
             # Calculation P(moving m to n) - prey and predator(0.6+0.4)
             p_predator_in_node_next = 0
             for i in list(self.graph.G.neighbors(max_belief_predator)):
@@ -462,16 +409,15 @@ class Agent7(Graph_util):
                 believes[i] = p_predator_in_node_next 
 
             # Distracted Predator acts like a prey (hence updating the beliefs)
-            # Updating belief to find P(Prey in ith node next)
-            #if DEBUG: print_b(believes, "after newwwww")
-            for i,v in believes.items():
-                p_predator_in_node_next = 0
-                neighbors = list(self.graph.G.neighbors(i))
-                neighbors.append(i)
-                for k in neighbors:    
-                    p_predator_in_node_next += p_predator_in_node_now[k]*(1/len(neighbors))
-                believes[i] = p_predator_in_node_next 
-        if DEBUG: print_b(believes, "final")
+        # Updating belief to find P(Prey in ith node next)
+        p_predator_in_node_now = copy.deepcopy(believes)
+        for i,v in believes.items():
+            p_predator_in_node_next = 0
+            neighbors = list(self.graph.G.neighbors(i))
+            neighbors.append(i)
+            for k in neighbors:    
+                p_predator_in_node_next += p_predator_in_node_now[k]*(1/len(neighbors))
+            believes[i] = p_predator_in_node_next 
         
     def update_prey_believes(self,prey, survey=False):
         DEBUG = False
