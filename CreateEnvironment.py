@@ -5,6 +5,34 @@ import random
 import numpy
 import pandas as pd
 
+def shortest_path(graph, distance, previous, source):
+    queue = []
+    
+    # Initialization of distance and previous
+    for node in graph.nodes():
+        distance[node] = None
+        previous[node] = 0
+    
+    distance[source] = 0
+    queue.append(source)
+
+    while len(queue) != 0:
+        v = queue.pop(0)
+        for w in graph.neighbors(v):
+            if distance[w] == None:
+                previous[w] = v
+                distance[w] = distance[v] + 1
+                queue.append(w)
+
+def get_path(t, previous):
+    edges = []
+
+    while previous[t] != 0:
+        edges.append((t, previous[t]))
+        t = previous[t]
+        
+    return edges
+
 class Node:
     def __init__(self, i) -> None:
         self.degree = 0
@@ -35,6 +63,7 @@ class Graph_util(Node):
             else:
                 self.G.add_node( i, data = node)
         self.generate_edges()
+        self.adjaceny_matrix = nx.to_numpy_matrix(self.G)
 
     def get_adj_list(self):
         return self.G.adj
@@ -79,7 +108,15 @@ class Graph_util(Node):
         edges = []
         count = 0
         random_node = random.choice(self.degree_dict[2])
-        for i in range(random_node, random_node+self.node_count):
+        if random.choice(["front", "back"]) == "front":
+            x = random_node
+            y = random_node+self.node_count
+            step = 1
+        else:
+            y = random_node
+            x = random_node+self.node_count
+            step = -1
+        for i in range(x, y, step):
             #print(i)
             if (i%self.node_count) in self.degree_dict[2] and ((i+5)%self.node_count) in self.degree_dict[2]:
                 edges.append((i%self.node_count,(i+5)%self.node_count))
@@ -106,76 +143,13 @@ class Graph_util(Node):
 
     def all_shortest_paths(self):
         return nx.floyd_warshall(self.G, weight='weight')
-# Simulate from multinomial distribution
-def simulate_multinomial(vmultinomial):
-        r=np.random.uniform(0.0, 1.0)
-        CS=np.cumsum(vmultinomial)
-        CS=np.insert(CS,0,0)
-        m=(np.where(CS<r))[0]
-        nextState=m[len(m)-1]
-        return nextState
 
-import numpy as np
-
-
-def stationary_probablity(start_state):
-    for i in range(50):
-        steady_state = np.dot(start_state,transition_matrix)
-    return steady_state
-   
 if __name__ == "__main__":
-    graph = Graph_util(10)
+    graph = Graph_util(50)
+    graph.display()
     adjaceny_matrix = nx.to_numpy_matrix(graph.G)
-    #adjaceny_matrix = (numpy.asanyarray(adjaceny_matrix))
-    #adjaceny_matrix[0] = 1
-    '''
-    
-    
-    '''
-    for i in range(len(adjaceny_matrix)):
-        adjaceny_matrix[i,i] = 1
-    #print(adjaceny_matrix)
-    
-    #input()
-    transition_matrix = (adjaceny_matrix/adjaceny_matrix.sum(axis=0))
-    print(transition_matrix)
 
-    # Normalize the matrix so that rows sum to 1
-    #P = adjaceny_matrix/np.sum(adjaceny_matrix, 1)[:, np.newaxis]
-    #print(P)
-    #start_state = np.array([ 0,0,0,0,0,0,0,0,0,0])
     
-    start_state = np.array([0 for i in range(10)])
-    start_state[3] = 1
-    start_state = np.array([1/9 for i in range(10)])
-    start_state[3] = 0
-    start_state = np.array([ 0.06611570247933884,
-                0.07644628099173555,
-                0.10743801652892562,
-                0.12603305785123967,
-                0.11157024793388431,
-                0.0847107438016529,
-                0.09917355371900828,
-                0.11983471074380166,
-                0.11776859504132232,
-                0.09090909090909091])
-    print(start_state)
-    input()
-    #start_state = np.dot(start_state,transition_matrix)
-    #print(start_state)
-    #start_state = np.dot(start_state,transition_matrix)
-    #rint(start_state)
-    #exit()
-    for i in range(50):
-            #transition_matrix = np.dot(transition_matrix.T,transition_matrix)
-            #transition_matrix = np.dot(transition_matrix.T,transition_matrix)
-            start_state = np.dot(start_state,transition_matrix)
-            
-            print(start_state)
-            input()
-            
-    print(start_state)
-    print(start_state.sum())
     
     
 

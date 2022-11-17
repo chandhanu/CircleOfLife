@@ -1,0 +1,54 @@
+testagent  :
+success_rate: 67.45, 
+variance: 84.41416666666663, 
+std deviation : 9.187718251375944
+
+agent1  :
+success_rate: 88.79333333333331, 
+variance: 36.11951111111111, 
+std deviation : 6.009951007380269
+
+agent2  :
+success_rate: 92.43333333333332, 
+variance: 13.047777777777785, 
+std deviation : 3.6121707846913584
+
+agent3  :
+success_rate: 85.98902000000001, 
+variance: 37.47183613737776, 
+std deviation : 6.121424355276945
+
+agent4  :
+success_rate: 88.53333333333335, 
+variance: 11.048888888888886, 
+std deviation : 3.3239868966181088
+
+agent5  :
+success_rate: 79.65333333333335, 
+variance: 94.39537777777792, 
+std deviation : 9.715728370934313
+
+agent6  :
+success_rate: 82.10666666666658, 
+variance: 63.92640000000003, 
+std deviation : 7.9953986767390175
+
+agent7  :
+success_rate: 72.77999999999994, 
+variance: 34.59159999999999, 
+std deviation : 5.881462403178311
+
+agent8  :
+success_rate: 75.48666666666668, 
+variance: 44.28760000000009, 
+std deviation : 6.654892936779682
+
+agent7noisy  :
+success_rate: 59.85333333333331, 
+variance: 129.19848888888893, 
+std deviation : 11.366551319062829
+
+agent8noisy  :
+success_rate: 63.29333333333331, 
+variance: 159.22728888888875, 
+std deviation : 12.618529585054224

@@ -50,7 +50,6 @@ def run_simulation(runs = 100, trials = 30, file = "agent1",variation= ""):
                 if file == "agent6":
                     agent = Agent6(graph, graph.node_count, prey, predator)
                     agent.inititate_believes(graph,predator)
-                    agent.stationary_probablity()
                 if file == "agent7":
                     agent = Agent7(graph, graph.node_count, prey, predator)
                     agent.inititate_believes(graph, prey,predator)
@@ -72,7 +71,7 @@ def run_simulation(runs = 100, trials = 30, file = "agent1",variation= ""):
                     r = random.choice ([20,21,23,25])
                     predator.value = (agent.get_position()+r)%graph.node_count
                     #prey.value = (agent.get_position())%graph.node_count
-                # Markup ends 
+                # Markup ends '''
             verdict, msg = agent.run(prey, predator, threshold=100)
             print(msg)
             if verdict == False : 
@@ -93,13 +92,13 @@ def run_simulation(runs = 100, trials = 30, file = "agent1",variation= ""):
         
 if __name__ == "__main__":
     #run_simulation(file = "agent1")
-    run_simulation(file = "testagent")
+    #run_simulation(file = "testagent")
     #run_simulation(file = "agent2")
     #run_simulation(file = "agent3", variation = "")
     #run_simulation(file = "agent4", variation = "")
     #run_simulation(file = "agent5", variation = "")
     #run_simulation(file = "agent6", variation = "")
     #run_simulation(file = "agent7", variation = "")
-    #run_simulation(file = "agent8", variation = "new")
+    run_simulation(file = "agent8", variation = "new")
     #run_simulation(file = "agent7noisy", variation = "")
     #run_simulation(file = "agent8noisy", variation = "")

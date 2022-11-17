@@ -141,6 +141,7 @@ class Agent6(Graph_util):
         self.node_count = graph.node_count
         self.belief_found_char_count = 0
         self.steady_state_belief = {} 
+        self.prey = prey
     
     def move(self, prey_pos, believes,  FIRST_TIME = False):
         DEBUG = False
@@ -282,7 +283,7 @@ class Agent6(Graph_util):
             predator.move_or_distract(self.value) #Predator can be distracted with the probablity of distribution of 40%  | with 60% it will pursue the target/agent
             self.status( prey, predator)
             # 7. Update belief for prey/predator based on their transition model
-            self.update_believes(predator, survey=False) # Only updates believes
+            self.transition() # Only updates believes
             # 8. Go to Step 1
             count+=1
             
@@ -338,21 +339,13 @@ class Agent6(Graph_util):
         return FAILURE, surveyed_node
     
     def update_believes(self,predator, survey=False, FIRST_TIME = False):
-        DEBUG = False
         believes = self.believes
-        if DEBUG: 
-                print("Updating beliefs")
-                print("----------CurrPos--------------")
-                print("Predator : ", predator.get_position())
-                print("Agent    : ", self.get_position())
-        if DEBUG: input()
         if survey:
             is_predator_found,surveyed_node = self.survey(predator)
 
             if FIRST_TIME:
                 surveyed_node = predator.get_position()
                 is_predator_found = True
-            if DEBUG: print("Picked random : ", surveyed_node)
             if is_predator_found:
                 for k,v in believes.items():
                     if k == surveyed_node:
@@ -360,7 +353,6 @@ class Agent6(Graph_util):
                     else:
                         believes[k] = 0
                 p_predator_in_node_now = copy.deepcopy(believes)
-                if DEBUG: print_b(believes, "p_predator_in_node_now")
                 
             else:
                 p_not_finding_predator_at_node = 1 - believes[surveyed_node]
@@ -370,21 +362,29 @@ class Agent6(Graph_util):
                         believes[k] = 0
                     else:
                         believes[k] = (believes[k]/p_not_finding_predator_at_node)
-                if DEBUG : input()
                 p_predator_in_node_now = copy.deepcopy(believes)
-                if DEBUG: print_b(p_predator_in_node_now, "p_predator_in_node_now")
                 # Updating belief to find P(Prey in ith node next)
                 
         else:
-            #Update belief
+            try:
+                #Update belief
+                k = self.get_position()
+                k_belief = believes[k]
+                p_predator_not_found_in_agent_node = 1-k_belief
+                believes[self.get_position()] = 0
+                for i,v in believes.items():
+                    if not (i == k):
+                        believes[i] = believes[i]/p_predator_not_found_in_agent_node
+            except:
+                #print(k_belief, k, predator.get_position())
+                return (self.status( self.prey, predator) ) 
+                #input()
+    
+    def transition(self):
             k = self.get_position()
-            k_belief = believes[k]
-            p_predator_not_found_in_agent_node = 1-k_belief
-            believes[self.get_position()] = 0
-            for i,v in believes.items():
-                if not (i == k):
-                    believes[i] = believes[i]/p_predator_not_found_in_agent_node
-            
+
+            believes = self.believes
+            #print_b(believes, "b4")
             p_predator_in_node_now = copy.deepcopy(believes)
             max_belief_predator_list = max_d(believes)
             max_belief_predator = self.break_ties(max_belief_predator_list)
@@ -406,36 +406,40 @@ class Agent6(Graph_util):
                 x = all_shortest_path_cost[self.get_position()][i]               
                 if len(shortest_path_from_agent_to_pred) == x:
                     ratio_60_count +=1
-                    s.append(x)
+                    s.append(x) #Count of eligible node agent can move to pursuing the target - 60%
                 else:
-                    ratio_40_count+=1
+                    ratio_40_count+=1 # Count of nodes agent can move to distracted
                 #print(i)
+
             # Calculation P(moving m to n) - prey and predator(0.6+0.4)
-            
+            '''
+            P(predator moving to node from B)
+                = 0.6*P(Predator moves from A to B) + 0.4*P(Prey moves from A to B)
+                = 0.6*(SumOverB - P(Predator moves from A to B)) 
+                    + 0.4*(SumOverB - P(Prey moves from A to B))
+            '''
             p_predator_in_node_next = 0
             for i in list(self.graph.G.neighbors(max_belief_predator)):
                 if i == max_belief_predator:
                     continue
                 elif i in s: 
-                    p_predator_in_node_next += p_predator_in_node_now[k]+ratio_60/len(s)
+                    p_predator_in_node_next += p_predator_in_node_now[k]+ratio_60/len(s) # Normalized for focused predator
                 else:
-                    p_predator_in_node_next += p_predator_in_node_now[k]+ratio_40/ratio_40_count
+                    p_predator_in_node_next += p_predator_in_node_now[k]+ratio_40/ratio_40_count # Normalized for distracted predator 
                 believes[i] = p_predator_in_node_next 
 
             # Distracted Predator acts like a prey (hence updating the beliefs)
-        # Updating belief to find P(Prey in ith node next)
-        
-        for i,v in believes.items():
-            p_predator_in_node_next = 0
-            neighbors = list(self.graph.G.neighbors(i))
-            neighbors.append(i)
-            for k in neighbors:    
-                p_predator_in_node_next += p_predator_in_node_now[k]*(1/len(neighbors))
-            believes[i] = p_predator_in_node_next 
-        
-        if DEBUG: print_b(believes, "final")
-        DEBUG =False
-
+            # Updating belief to find P(Prey in ith node next)
+            
+            for i,v in believes.items():
+                p_predator_in_node_next = 0
+                neighbors = list(self.graph.G.neighbors(i))
+                neighbors.append(i) # eg: Deg(3)+node itself
+                for k in neighbors:    
+                    p_predator_in_node_next += p_predator_in_node_now[k]*(1/len(neighbors))
+                believes[i] = p_predator_in_node_next 
+            #print_b(believes, "after")
+            #input()
     def status(self, prey, predator):
         '''
         Module to check 
