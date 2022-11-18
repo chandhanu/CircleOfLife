@@ -344,8 +344,8 @@ class Agent8_noisy(Graph_util):
                 print("Agent - ", self.get_position())
                 print("---------------------------------")
             # 7. Update belief for prey/predator based on their transition model
-            self.update_prey_believes(prey, survey=False)
-            self.update_predator_believes(predator, survey=False) # Only updates believes
+            self.transition_prey()
+            self.transition_pred()
             # 8. Go to Step 1
             count+=1
             
@@ -358,7 +358,87 @@ class Agent8_noisy(Graph_util):
             print("agent prey predator ")
             print(self.get_position(), "  ", prey.get_position(), "  ", predator.get_position())
             return  FAILURE, "total count "+str(count)
+            
+    def transition_prey(self):
+        believes = self.believes_prey
+        # Updating belief to find P(Prey in ith node next)
+        p_prey_in_node_now = copy.deepcopy(believes)
+        DEBUG = False
+        for i,v in believes.items():
+            p_prey_in_node_next = 0
+            neighbors = list(self.graph.G.neighbors(i))
+            neighbors.append(i) # eg: Deg(3)+node itself
+            for k in neighbors: # optimised to calculate the P(prey in ith node next) using the neighbor of the ith node
+                p_prey_in_node_next += p_prey_in_node_now[k]*(1/len(neighbors))
+                if DEBUG: print(k,":",p_prey_in_node_now[k], "*",0.25 ,"=", p_prey_in_node_next) 
+            believes[i] = p_prey_in_node_next
+            if DEBUG: print("+++P(",i,") = ",believes[i])
+        if DEBUG: print_b(believes, "p_prey_in_node_next")
+        DEBUG = False
+          
+    def transition_pred(self):
+            k = self.get_position()
 
+            believes = self.believes_predator
+            #print_b(believes, "b4")
+            p_predator_in_node_now = copy.deepcopy(believes)
+            try:
+                max_belief_predator_list = max_d(believes)
+            except:
+                print(believes)
+            max_belief_predator = self.break_ties(max_belief_predator_list)
+            max_belief = believes[max_belief_predator]
+            believes[max_belief_predator] = 0 
+
+            all_shortest_path_cost =  self.graph.all_shortest_paths() 
+            all_pairs_shortest_path = dict(nx.all_pairs_shortest_path(self.graph.G))
+            all_pairs_shortest_path[self.get_position()][max_belief_predator].remove(max_belief_predator)
+            ratio_40 = 0.4*max_belief # Factoring in the distraction
+            ratio_60 = 0.6*max_belief # Factoring in the target pursuation 
+            
+            shortest_path_from_agent_to_pred = all_pairs_shortest_path[self.get_position()][max_belief_predator]
+            believes[max_belief_predator] = 0
+            s= []
+            ratio_60_count = 0
+            ratio_40_count = 0
+            for i in list(self.graph.G.neighbors(max_belief_predator)):
+                x = all_shortest_path_cost[self.get_position()][i]               
+                if len(shortest_path_from_agent_to_pred) == x:
+                    ratio_60_count +=1
+                    s.append(x) #Count of eligible node agent can move to pursuing the target - 60%
+                else:
+                    ratio_40_count+=1 # Count of nodes agent can move to distracted
+                #print(i)
+
+            # Calculation P(moving m to n) - prey and predator(0.6+0.4)
+            '''
+            P(predator moving to node from B)
+                = 0.6*P(Predator moves from A to B) + 0.4*P(Prey moves from A to B)
+                = 0.6*(SumOverB - P(Predator moves from A to B)) 
+                    + 0.4*(SumOverB - P(Prey moves from A to B))
+            '''
+            p_predator_in_node_next = 0
+            for i in list(self.graph.G.neighbors(max_belief_predator)):
+                if i == max_belief_predator:
+                    continue
+                elif i in s: 
+                    p_predator_in_node_next += p_predator_in_node_now[k]+ratio_60/len(s) # Normalized for focused predator
+                else:
+                    p_predator_in_node_next += p_predator_in_node_now[k]+ratio_40/ratio_40_count # Normalized for distracted predator 
+                believes[i] = p_predator_in_node_next 
+
+            # Distracted Predator acts like a prey (hence updating the beliefs)
+            # Updating belief to find P(Prey in ith node next)
+            
+            for i,v in believes.items():
+                p_predator_in_node_next = 0
+                neighbors = list(self.graph.G.neighbors(i))
+                neighbors.append(i) # eg: Deg(3)+node itself
+                for k in neighbors:    
+                    p_predator_in_node_next += p_predator_in_node_now[k]*(1/len(neighbors))
+                believes[i] = p_predator_in_node_next 
+            #print_b(believes, "after")
+            #input()
     def inititate_believes(self, graph, prey,predator):
         believes = {}
         # initialize

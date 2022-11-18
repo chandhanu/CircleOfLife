@@ -236,7 +236,7 @@ class Agent3(Graph_util):
             predator.move(self.value)
             self.status( prey, predator)
             # 7. Update belief for prey/predator based on their transition model
-            self.update_believes(prey, survey=False)
+            self.transition()
             # 8. Go to Step 1
             count+=1
             
@@ -288,27 +288,19 @@ class Agent3(Graph_util):
                         believes[k] = 0
                 
             else:
-                p_not_finding_prey_at_node = 1 - believes[surveyed_node]
-                # Updating belief to find P(prey in ith node/ survyed and failed to find prey in random_node)
-                for k,v in believes.items():
-                    if k == surveyed_node:
-                        believes[k] = 0
-                    else:
-                        believes[k] = (believes[k]/p_not_finding_prey_at_node)#+(believes[k]/p_not_finding_prey_at_node)/(self.node_count-2)
-                #if DEBUG : input()
-                #self.p_prey_in_node_next()
-                p_prey_in_node_now = copy.deepcopy(believes)
+                #print(surveyed_node, believes[surveyed_node], is_prey_found, prey.get_position())
+                #if believes[surveyed_node]!=1:
+                    p_not_finding_prey_at_node = 1 - believes[surveyed_node]
+                    # Updating belief to find P(prey in ith node/ survyed and failed to find prey in random_node)
+                    for k,v in believes.items():
+                        if k == surveyed_node:
+                            believes[k] = 0
+                        else:
+                            believes[k] = (believes[k]/p_not_finding_prey_at_node)
+                #p_prey_in_node_now = copy.deepcopy(believes)
                 
         else:
             #Update belief
-            DEBUG = False
-            if DEBUG: 
-                print("Updating beliefs")
-                print("----------CurrPos--------------")
-                print("Prey     : ", prey.get_position())
-                #print("Predator : ", predator.get_position())
-                print("Agent    : ", self.get_position())
-                print_b(self.believes, "xxxx Updating beliefs xxxx")
             #P(prey in agent's node) = 0
             k = self.get_position()
             k_belief = believes[k]
@@ -318,13 +310,17 @@ class Agent3(Graph_util):
                 for i,v in believes.items():
                     if not (i == k):
                         believes[i] = believes[i]/p_prey_not_found_in_agent_node
+        #print_b(believes)
+
+    def transition(self):
+        believes = self.believes
         # Updating belief to find P(Prey in ith node next)
         p_prey_in_node_now = copy.deepcopy(believes)
-        if DEBUG: print_b(believes, "yyy Updating beliefs yyy")
+        DEBUG = False
         for i,v in believes.items():
             p_prey_in_node_next = 0
             neighbors = list(self.graph.G.neighbors(i))
-            neighbors.append(i)
+            neighbors.append(i) # eg: Deg(3)+node itself
             for k in neighbors: # optimised to calculate the P(prey in ith node next) using the neighbor of the ith node
                 p_prey_in_node_next += p_prey_in_node_now[k]*(1/len(neighbors))
                 if DEBUG: print(k,":",p_prey_in_node_now[k], "*",0.25 ,"=", p_prey_in_node_next) 
