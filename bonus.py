@@ -254,9 +254,12 @@ class Agent4(Graph_util):
 
             self.status( prey, predator)
             # 1. Survey and 2. update beliefs
-            self.update_believes(prey, survey=True)
-            # 3. Move Agent - check if it catches the prey
-            self.move(predator.get_position(), self.believes)
+            max_belief_list = max_d(self.believes)
+            if len(max_belief_list)>self.node_count/2:
+                self.update_believes(prey, survey=True)
+                # 3. Move Agent - check if it catches the prey
+            else:
+                self.move(predator.get_position(), self.believes)
             self.status( prey, predator)
             # 4. Update belief for prey/predator based on observation
             self.update_believes(prey, survey=False)
